@@ -60,6 +60,7 @@ extern float scale;
 void updateGui();
 void setPen(int type);
 int getPen();
+int getLastPen();
 void setPenStyle(int style);
 void setLineStyle(int style);
 void openFile(QString filename);
@@ -69,6 +70,7 @@ void removeDirectory(const QString &path);
 void setupWidgets();
 void setupPenType();
 void setupSaveLoad();
+bool isPenType();
 
 #ifdef QPRINTER
 extern bool PDFMODE;
@@ -106,12 +108,14 @@ public:
     int getPageNum();
     bool isBackAvailable();
     bool isNextAvailable();
+    bool isPenType();
     void loadImage(int num);
     void mergeSelection();
     void clearSelection();
     void addImage(QImage img);
     void setPen(int type);
     int getPen();
+    int getLastPen();
     void setPenStyle(int type);
     int getPenStyle();
     void setLineStyle(int type);
@@ -142,6 +146,7 @@ protected:
     int penType;
     int penStyle;
     int lineStyle;
+    int lastPenType;
     GeometryStorage geo;
     StrokeVariables recognitionVariables;
     StrokeResult recognitionResult;

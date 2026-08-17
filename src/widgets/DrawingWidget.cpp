@@ -44,6 +44,7 @@ DrawingWidget::DrawingWidget(QWidget *parent): QWidget(parent) {
     penType=PEN;
     penStyle=SPLINE;
     lineStyle=NORMAL;
+    lastPenType = penType;
     setMouseTracking(true);
     setAttribute(Qt::WA_AcceptTouchEvents);
     num_of_press = 0;
@@ -243,6 +244,9 @@ void DrawingWidget::setPen(int type){
         if(penType == PENTEXT && textActive){
             commitText();
         }
+        if(type != ERASER && type != SELECTION){
+            lastPenType = type;
+        }
         penType = type;
         QColor penColor = pen.color();
         penColor.setAlpha(255);
@@ -258,6 +262,9 @@ void DrawingWidget::setPen(int type){
 
 int DrawingWidget::getPen(){
     return penType;
+}
+int DrawingWidget::getLastPen(){
+    return lastPenType;
 }
 void DrawingWidget::setPenStyle(int type){
     penStyle = type;
@@ -573,6 +580,12 @@ bool DrawingWidget::isNextAvailable(){
     return images.last_image_num < images.image_count;
 }
 
+bool DrawingWidget::isPenType() {
+    return penType == PEN ||
+           penType == MARKER ||
+           penType == PENTEXT ||
+           penType == SMART_PEN;
+}
 
 QColor convertColor(const QColor& color) {
     int tot =  color.red() + color.blue() + color.green();

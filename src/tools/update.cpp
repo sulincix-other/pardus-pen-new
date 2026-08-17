@@ -32,7 +32,7 @@ void updateGui(){
     } else if (pen == ERASER){
         toolButtons[ERASERMENU]->setStyleSheet("background-color:"+drawing->pen.color().name()+";");
     } else {
-        set_icon(get_icon_by_id(PEN), toolButtons[PENMENU]);
+        set_icon(get_icon_by_id(drawing->getLastPen()), toolButtons[PENMENU]);
     }
 
     // clear only previously-active buttons instead of all penButtons
