@@ -53,6 +53,7 @@ struct StrokeFeatures {
 
 struct StrokeResult {
     std::array<QPointF, 4> idealCorners{};
+    std::array<float, 4> idealEdgeTheta{};
     QPointF circleCenter{};
     float circleRadius = 0.0f;
 };

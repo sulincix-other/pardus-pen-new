@@ -503,6 +503,81 @@ bool MakeOppositeEdgesParallel(float edgeTheta[4]) {
     return true;
 }
 
+void CorrectRectangle(StrokeResult &result) {
+    constexpr float ANGLE_THRESHOLD = 15.0f;
+
+    // the 0-2 edges are the first and third edges and they are opposite to each other
+    // in naming the edges i used 02 and 13 to represent the opposite edges and making understanding easier
+
+    float averageTheta02 = AverageParallelAngle(result.idealEdgeTheta[0], result.idealEdgeTheta[2]);
+    float averageTheta13 = AverageParallelAngle(result.idealEdgeTheta[1], result.idealEdgeTheta[3]);
+
+    float distance02To0 = LineAngleDifference(averageTheta02, 0.0f);
+    float distance02To90 = LineAngleDifference(averageTheta02, 90.0f);
+
+    float distance13To0 = LineAngleDifference(averageTheta13, 0.0f);
+    float distance13To90 = LineAngleDifference(averageTheta13, 90.0f);
+
+    bool edge02Horizontal = distance02To0 <= ANGLE_THRESHOLD;
+    bool edge02Vertical = distance02To90 <= ANGLE_THRESHOLD;
+
+    bool edge13Horizontal = distance13To0 <= ANGLE_THRESHOLD;
+    bool edge13Vertical = distance13To90 <= ANGLE_THRESHOLD;
+
+    if (edge02Horizontal && edge13Vertical) {
+        result.idealEdgeTheta[0] = 0.0f;
+        result.idealEdgeTheta[2] = 0.0f;
+        result.idealEdgeTheta[1] = 90.0f;
+        result.idealEdgeTheta[3] = 90.0f;
+    }
+    else if (edge02Vertical && edge13Horizontal) {
+        result.idealEdgeTheta[0] = 90.0f;
+        result.idealEdgeTheta[2] = 90.0f;
+        result.idealEdgeTheta[1] = 0.0f;
+        result.idealEdgeTheta[3] = 0.0f;
+    }
+    else {
+        return;
+    }
+    float midpointX[4];
+    float midpointY[4];
+
+    for (int i = 0; i < 4; i++) {
+        midpointX[i] = (result.idealCorners[i].x() + result.idealCorners[(i + 1) % 4].x()) / 2.0f;
+        midpointY[i] = (result.idealCorners[i].y() + result.idealCorners[(i + 1) % 4].y()) / 2.0f;
+    }
+
+    QPointF newCorners[4];
+
+    for (int i = 0; i < 4; i++) {
+        int next = (i + 1) % 4;
+
+        float x = 0.0f;
+        float y = 0.0f;
+
+        bool intersectionFound = FindLineIntersection(
+            midpointX[i],
+            midpointY[i],
+            result.idealEdgeTheta[i],
+            midpointX[next],
+            midpointY[next],
+            result.idealEdgeTheta[next],
+            &x,
+            &y);
+
+        if (!intersectionFound)
+            return;
+
+        newCorners[next] = QPointF(x, y);
+    }
+
+    for (int i = 0; i < 4; i++) {
+        result.idealCorners[i] = newCorners[i];
+    }
+
+    return;
+}
+
 bool CreateIdealShape(const int regionStart[], const int regionEnd[], int regionCount,
                       const StrokeVariables &variables, StrokeResult &result) {
     float averageThetaForLine[4] = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -555,6 +630,7 @@ bool CreateIdealShape(const int regionStart[], const int regionEnd[], int region
             return false;
 
         result.idealCorners[i] = QPointF(idealCornerXValue, idealCornerYValue);
+        result.idealEdgeTheta[i] = averageThetaForLine[i];
     }
 
     return true;
@@ -626,6 +702,7 @@ float CalculateShapeFitSquare(const StrokeFeatures &features, const StrokeVariab
                                                  newturnRegionCount, variables, result);
         if (!doesfunctionwork)
             return 0;
+        CorrectRectangle(result);
         score = CalculateShapeFitError(RECOG_SQUARE, result.idealCorners, newturnRegionStart,
                                        newturnRegionEnd, variables);
         return score;
